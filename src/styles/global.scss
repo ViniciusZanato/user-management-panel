@@ -1,0 +1,19 @@
+body {
+  display: flex;
+  justify-content: center;
+  padding: 20px;
+  padding-top: 0;
+
+  #root {
+    width: 100%;
+    max-width: fit-content;
+    .page-title {
+      margin-top: 0;
+      text-align: center;
+
+      @media (max-width: 576px) {
+        font-size: 2rem;
+      }
+    }
+  }
+}
