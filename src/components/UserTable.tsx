@@ -1,16 +1,11 @@
-import { useState, useMemo } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { useSelector, useDispatch } from "react-redux";
-
+import type { RootState, AppDispatch } from "../app/store";
+import { deleteUser, fetchUsers } from "../features/users/usersSlice";
 import UserForm from "./UserForm";
 import type { User } from "../types/User";
-import type { RootState } from "../app/store";
-import { deleteUser } from "../features/users/usersSlice";
 
-import EditIcon from "@mui/icons-material/Edit";
-import DeleteIcon from "@mui/icons-material/Delete";
 import {
-  IconButton,
-  TableSortLabel,
   Table,
   TableBody,
   TableCell,
@@ -19,8 +14,13 @@ import {
   TableRow,
   Paper,
   TextField,
+  TableSortLabel,
+  IconButton,
   TablePagination,
 } from "@mui/material";
+
+import EditIcon from "@mui/icons-material/Edit";
+import DeleteIcon from "@mui/icons-material/Delete";
 
 export default function UserTable() {
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
@@ -30,16 +30,24 @@ export default function UserTable() {
   const [rowsPerPage, setRowsPerPage] = useState(5);
 
   const users = useSelector((state: RootState) => state.users.users);
-  const dispatch = useDispatch();
+  const dispatch = useDispatch<AppDispatch>();
+
+  useEffect(() => {
+    dispatch(fetchUsers());
+  }, [dispatch]);
 
   const handleEdit = (user: User) => setSelectedUser(user);
-
   const handleDelete = (id: number) => {
     if (window.confirm("Are you sure you want to delete this user?")) {
       dispatch(deleteUser(id));
     }
   };
 
+  const handleSort = () =>
+    setSortOrder((prev) => (prev === "asc" ? "desc" : "asc"));
+
+  const handleChangePage = (_event: unknown, newPage: number) =>
+    setPage(newPage);
   const handleChangeRowsPerPage = (
     event: React.ChangeEvent<HTMLInputElement>,
   ) => {
@@ -47,25 +55,16 @@ export default function UserTable() {
     setPage(0);
   };
 
-  const handleSort = () =>
-    setSortOrder((prev) => (prev === "asc" ? "desc" : "asc"));
-
-  const handleChangePage = (_event: unknown, newPage: number) => {
-    setPage(newPage);
-  };
-
   const filteredUsers = useMemo(() => {
     const filtered = users.filter((user) =>
       user.name.toLowerCase().includes(search.toLowerCase()),
     );
 
-    const sorted = filtered.sort((a, b) =>
+    return filtered.sort((a, b) =>
       sortOrder === "asc"
         ? a.name.localeCompare(b.name)
         : b.name.localeCompare(a.name),
     );
-
-    return sorted;
   }, [users, search, sortOrder]);
 
   const paginatedUsers = filteredUsers.slice(
@@ -102,7 +101,6 @@ export default function UserTable() {
               <TableCell>Actions</TableCell>
             </TableRow>
           </TableHead>
-
           <TableBody>
             {paginatedUsers.map((user) => (
               <TableRow key={user.id}>
@@ -121,7 +119,6 @@ export default function UserTable() {
             ))}
           </TableBody>
         </Table>
-
         <TablePagination
           component="div"
           count={filteredUsers.length}
@@ -131,7 +128,6 @@ export default function UserTable() {
           onRowsPerPageChange={handleChangeRowsPerPage}
           rowsPerPageOptions={[5, 10, 25]}
         />
-
         {selectedUser && (
           <UserForm
             user={selectedUser}

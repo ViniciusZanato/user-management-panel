@@ -1,6 +1,7 @@
-import { createSlice } from "@reduxjs/toolkit";
+import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import type { PayloadAction } from "@reduxjs/toolkit";
 import type { User } from "../../types/User";
+import { fetchUsers as fetchUsersAPI } from "./usersAPI";
 
 interface UsersState {
   users: User[];
@@ -20,37 +21,42 @@ const initialState: UsersState = {
   users: loadUsers(),
 };
 
-const saveUsers = (users: User[]) => {
-  localStorage.setItem("users", JSON.stringify([...users]));
-};
+export const fetchUsers = createAsyncThunk<User[]>(
+  "users/fetchUsers",
+  async () => {
+    return await fetchUsersAPI();
+  },
+);
 
 const usersSlice = createSlice({
   name: "users",
   initialState,
   reducers: {
-    setUsers: (state, action: PayloadAction<User[]>) => {
-      state.users = action.payload;
-    },
-
     addUser: (state, action: PayloadAction<User>) => {
       state.users.push(action.payload);
-      saveUsers(state.users);
     },
 
     updateUser: (state, action: PayloadAction<User>) => {
       const index = state.users.findIndex((u) => u.id === action.payload.id);
+
       if (index !== -1) {
         state.users[index] = action.payload;
-        saveUsers(state.users);
       }
     },
 
     deleteUser: (state, action: PayloadAction<number>) => {
       state.users = state.users.filter((u) => u.id !== action.payload);
-      saveUsers(state.users);
     },
+  },
+
+  extraReducers: (builder) => {
+    builder.addCase(fetchUsers.fulfilled, (state, action) => {
+      if (state.users.length === 0) {
+        state.users = action.payload;
+      }
+    });
   },
 });
 
-export const { setUsers, addUser, updateUser, deleteUser } = usersSlice.actions;
+export const { addUser, updateUser, deleteUser } = usersSlice.actions;
 export default usersSlice.reducer;
