@@ -4,6 +4,10 @@ A simple user management application built with React and TypeScript.
 
 The application allows users to be listed, created, edited, deleted and filtered by name.
 
+## Live Demo
+
+https://user-management-panel-sand.vercel.app/
+
 ## Tech Stack
 
 - React
